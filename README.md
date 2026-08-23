@@ -2,35 +2,33 @@
 A text based way to download minecraft mods (and resources) over the internet via modrinth
 
 # All Keywords
-| name | type | description | notes |
-| --- | --- | --- | --- |
-condition
-desire
-if
-require
-
-author
-include-all-dependencies
-include-all-deps
-include-dependencies
-include-deps
-latest
-latest-version
-loader
-mc-version
-minecraft-version
-mod
-org
-organization
-proj-version
-project-version
-resource
-resource-pack
-
-max-errors
-max-warnings
-mod-location
-resource-location
+| name | description | notes |
+| --- | --- | --- |
+| condition | allows you to specify on the command line whether to include the specific mod/resource | |
+| if  | alias of condition | |
+| require | specifies whether a mod need to be included or not | require/desire is required for mods/resources; if it cant be included, then an error will be given |
+| desire | specifies whether a mod should optionally be included | if the mod/resource cant be included, a warning will be given |
+| author | helps filter searches, include if possible, but not required | |
+| include-all-dependencies | specifies whether to include all dependencies or not | if you only need required dependencies, then dont include this |
+| include-all-deps | alias of include-all-dependencies | |
+| include-dependencies | specifies whether to download dependencies of a mod, or only the specified mod | if you want to/would rather explicitly include dependencies, then dont include this |
+| include-deps | alias of include-dependencies | |
+| latest-version | specifies whether to download the latest version or not | this is the default behavior if no version is included |
+| latest | alias of latest-version |  |
+| loader | specifies what loader to search for | fabric, forge, neoforge, et cetera |
+| minecraft-version | specifies what minecraft version to look for |  |
+| mc-version | alias of mc-version |  |
+| mod | specifies that the resource type you want to download is a mod | |
+| organization | specifies what organization the resource is under | this may not be helpful, author is generally better to search under |
+| org | alias of organization | |
+| project-version | specifies a specific version of the resource to look for |  |
+| proj-version | alias of project-version | |
+| resource-pack | specifies that the resource type you want to download is a resource/texture pack  | |
+| resource | alias of resource-pack | |
+| max-errors | sets the maximum amount of errors that can occur when looking for mods/resources before the program will exit | 0 by default |
+| max-warnings | sets the maximum amount of warnings that can occur when looking for mods/resources before the program will exit | 5 by default |
+| mod-location | where to download the mods to | should be a folder, relative folder locations do work with this |
+| resource-location | where to download the resource packs to | should be a folder, relative folder locations do work with this |
 
 
 
