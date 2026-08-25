@@ -195,3 +195,8 @@ mod-location "../mod"
 require resource-pack "mandalas-gui-dark-mode" author "CesarZorak"
 require mod "Sodium" author "jellysquid3" loader "fabric"
 ```
+
+### TODO
+- Add Tests
+- Add Shader Support
+- Add Modpack Support (i.e. declare what modpack you want and its resources will be downloaded, from there you can add on top of it)
