@@ -53,17 +53,16 @@ inline nlohmann::json getJsonFromRequestUrl(const std::string& url) {
     try {
         cpr::Response r = cpr::Get(cpr::Url{url});
         if (r.status_code > 299) {
-            std::print("{} API Error: {}{}\n", Colors::RED, r.reason, Colors::RESET);
+            std::print("{} URL Error: {}{}\n", Colors::RED, r.reason, Colors::RESET);
+            return "";
         }
-        try {
-            auto json = nlohmann::json::parse(r.text);
-            return json;
-        } catch (nlohmann::json::parse_error& e) {
-            std::print("Failed Parsing Json: {} {}\n", e.what(), e.byte);
-        }
-
-    } catch (std::exception& e) {
-        std::print("CPR (cUrl) Error: {}\n", e.what());
+        return nlohmann::json::parse(r.text);
+    }
+    catch (nlohmann::json::exception& e) {
+        std::print("Failed Parsing Json From URL: {} {}\n", e.what(), e.id);
+    }
+    catch (std::exception& e) {
+        std::print("URL Error: {}\n", e.what());
     }
     return "";
 }
@@ -76,5 +75,6 @@ inline std::string cleanStringForUrl(const std::string& str) {
     std::string string = std::regex_replace(str, std::regex("\""), "%22");
     return std::regex_replace(string, std::regex(" "), "%20");
 }
+
 
 #endif //COGITOPLATFORM_URLREQUEST_HPP

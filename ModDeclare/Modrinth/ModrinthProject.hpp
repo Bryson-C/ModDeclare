@@ -8,18 +8,26 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <print>
 
 #include "nlohmann/json.hpp"
 
 #include "../Util/ANSIColors.hpp"
+#include "../Util/UrlRequest.hpp"
 
-class ModrinthProject {
+class ModrinthProjectSearchResult {
 private:
-    static std::string getJsonStringOrEmpty(nlohmann::json json, std::string key) {
+    static std::string getJsonStringOrEmpty(const nlohmann::json& json, const std::string& key) {
         if (json.contains(key) && !json[key].is_null()) {
             return json[key].get<std::string>();
         }
         return "";
+    }
+    static int getJsonIntOr0(const nlohmann::json& json, const std::string& key) {
+        if (json.contains(key) && !json[key].is_null()) {
+            return json[key].get<int>();
+        }
+        return 0;
     }
 public:
 
@@ -38,6 +46,16 @@ public:
         if (str == "resourcepack") return ProjectType::ResourcePack;
         if (str == "shader") return ProjectType::Shader;
         return ProjectType::Unknown;
+    }
+    static std::string projectTypeToString(ProjectType type) {
+        switch (type) {
+            case ProjectType::Mod: return "mod";
+            case ProjectType::ModPack: return "modpack";
+            case ProjectType::ResourcePack: return "resourcepack";
+            case ProjectType::Shader: return "shader";
+            default: break;
+        }
+        return "unknown";
     }
 
     enum class RequirementStatus {
@@ -74,16 +92,16 @@ public:
     std::string slug;
     std::vector<std::string> gallery;
 
-    ModrinthProject() = default;
+    ModrinthProjectSearchResult() = default;
 
-    static ModrinthProject getProjectFromJson(nlohmann::json json) {
-        ModrinthProject project;
+    static ModrinthProjectSearchResult getProjectFromJson(nlohmann::json json) {
+        ModrinthProjectSearchResult project;
         project.icon_url = getJsonStringOrEmpty(json, "icon_url");
         project.project_type = projectTypeFromString(getJsonStringOrEmpty(json, "project_type"));
-        project.color = json["color"];
+        project.color = getJsonIntOr0(json, "color");
         project.author = getJsonStringOrEmpty(json, "author");
         project.date_created = getJsonStringOrEmpty(json, "date_created");
-        project.follows = json["follows"];
+        project.follows = getJsonIntOr0(json, "follows");
         project.description = getJsonStringOrEmpty(json, "description");
         project.title = getJsonStringOrEmpty(json, "title");
         project.client_side = requirementStatusFromString(getJsonStringOrEmpty(json, "client_side"));
@@ -118,13 +136,77 @@ public:
         return project;
     }
 
-    ModrinthProject(nlohmann::json json) {
+    ModrinthProjectSearchResult(nlohmann::json json) {
         *this = getProjectFromJson(json);
     }
 
     std::string toColoredString() const {
         return (std::string) Colors::BLUE + title + Colors::RESET + " -- " + Colors::GREEN + description + Colors::RESET;
     }
+};
+
+/**
+ * ModrinthProject is a slug with a version number
+ * (along with any additional details which may be useful for downloading a project such as the download link)
+ */
+class ModrinthProject {
+private:
+    std::string slugOrId, version;
+    nlohmann::json rawJson;
+
+    std::vector<std::pair<std::string, ModrinthProject>> dependencies;
+
+    void getJsonDataIfNotAssigned() {
+        if ((rawJson.empty() || rawJson.is_null()) && (!slugOrId.empty() && !version.empty())) {
+            rawJson = getJsonFromRequestUrl(cleanStringForUrl(
+               std::format(R"(https://api.modrinth.com/v2/project/{}/version/{})", slugOrId, version)
+            ));
+        } else {
+            std::print("Cannot Get Json Data For Modrinth Project: Not Enough Info To Send Request\n");
+        }
+    }
+public:
+    explicit ModrinthProject(const nlohmann::json& json) {
+        slugOrId = json["project_id"].get<std::string>();
+        version = json["id"].get<std::string>();
+        rawJson = json;
+    }
+    ModrinthProject(const std::string& slugOrId, const std::string& version) : slugOrId{slugOrId}, version{version} {
+        getJsonDataIfNotAssigned();
+    }
+
+    void addDependency(const ModrinthProject& dep, const std::string& dependencyType) {
+        dependencies.emplace_back(dependencyType, dep);
+    }
+
+    // takes the tree of dependencies and their dependencies (and so on) and puts them in a 1d array along with their requirement status
+    std::vector<std::pair<std::string, ModrinthProject>> flattenDependencies() {
+        std::vector<std::pair<std::string, ModrinthProject>> depends;
+        // then flatten the dependencies from a tree like structure to a simple array to iterate over
+        std::function<void(const ModrinthProject&)> getAllDeps = [&](const ModrinthProject& project) {
+            for (auto& dep : project.getDependencies()) {
+                depends.emplace_back(dep);
+                getAllDeps(dep.second);
+            }
+        };
+        getAllDeps(*this);
+        return depends;
+    }
+
+    const std::string& getVersion() const { return version; }
+    const std::string& getSlugOrId() const { return slugOrId; }
+    const std::vector<std::pair<std::string,ModrinthProject>>& getDependencies() const { return dependencies; }
+
+    [[nodiscard]] std::string getFileName() const {
+        return rawJson["files"][0]["filename"].get<std::string>();
+    }
+    [[nodiscard]] std::string getFileUrl() const {
+        return rawJson["files"][0]["url"].get<std::string>();
+    }
+    [[nodiscard]] std::string getProjectType() const {
+        return rawJson["project_type"].get<std::string>();
+    }
+
 };
 
 #endif //COGITOPLATFORM_MODRINTHPROJECT_HPP
