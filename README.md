@@ -6,13 +6,17 @@ A text based way to download minecraft mods (and resources) over the internet vi
 | --- | --- | --- |
 | condition | allows you to specify on the command line whether to include the specific mod/resource | |
 | if  | alias of condition | |
-| require | specifies whether a mod need to be included or not | require/desire is required for mods/resources; if it cant be included, then an error will be given |
-| desire | specifies whether a mod should optionally be included | if the mod/resource cant be included, a warning will be given |
+| require | specifies whether a mod need to be included or not | require/desire is required for mods/resources; if it can't be included, then an error will be given |
+| desire | specifies whether a mod should optionally be included | if the mod/resource can't be included, a warning will be given |
 | author | helps filter searches, include if possible, but not required | |
-| include-all-dependencies | specifies whether to include all dependencies or not | if you only need required dependencies, then dont include this |
+| include-all-dependencies | specifies whether to include all dependencies or not | if you only need required dependencies, then don't include this |
 | include-all-deps | alias of include-all-dependencies | |
-| include-dependencies | specifies whether to download dependencies of a mod, or only the specified mod | if you want to/would rather explicitly include dependencies, then dont include this |
+| include-dependencies | specifies whether to download dependencies of a mod, or only the specified mod | if you want to/would rather explicitly include dependencies, then don't include this |
 | include-deps | alias of include-dependencies | |
+| allow-betas | This allows the program to also include betas of mods in its search for a specific mod | whether or not the mod works during runtime is not the program's concern |
+| betas | alias of allow-betas | |
+| allow-alphas | This allows the program to also include alphas of mods in its search for a specific mod | whether or not the mod works during runtime is not the program's concern 
+| alphas | alias of allow-alphas | |
 | latest-version | specifies whether to download the latest version or not | this is the default behavior if no version is included |
 | latest | alias of latest-version |  |
 | loader | specifies what loader to search for | fabric, forge, neoforge, et cetera |
