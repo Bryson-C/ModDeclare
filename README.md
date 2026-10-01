@@ -34,7 +34,7 @@ A text based way to download minecraft mods (and resources) over the internet vi
 | mod-location | where to download the mods to | should be a folder, relative folder locations do work with this |
 | resource-location | where to download the resource packs to | should be a folder, relative folder locations do work with this |
 
-
+-# Not all keywords may be displayed, this is a laziness issue on my part and will likely be fixed
 
 
 # Examples
