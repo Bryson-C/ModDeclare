@@ -1,0 +1,1 @@
+require mod "sodium" organization "CaffeineMC" loader "fabric" mc-version "26.3" latest-version

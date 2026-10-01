@@ -1,0 +1,3 @@
+require mod "Concurrent Chunk Management Engine" author "ishland" loader "fabric" mc-version "26.1.2" latest-version
+require mod "Sodium" author "jellysquid3" mc-version "26.1.2" latest-version
+require mod "Zoomify" author "isxander" mc-version "26.1.2" latest-version

@@ -1,0 +1,7 @@
+
+sodium_mod: require mod "Sodium" organization "CaffeineMC"
+preferred_minimap: require mod "my really cool minimap mod"
+shader_mod: require mod "Iris Shaders" include-dependencies
+
+if-not "sodium_mod" vulkan_mod: require mod "Vulkan Mod"
+if-not "preferred_minimap" fallback_minimap: require mod "Xaero's Minimap" author "thexaero"

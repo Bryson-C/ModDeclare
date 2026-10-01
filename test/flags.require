@@ -1,0 +1,15 @@
+# loader fabric requested from commandline
+condition "fabric" {
+    require mod "sodium" organization "CaffeineMC" loader "fabric"
+    require mod "Xaero's minimap" loader "fabric"
+}
+# loader neoforge requested from commandline
+if "neoforge" {
+    require mod "sodium" organization "CaffeineMC" loader "neoforge"
+    require mod "Xaero's minimap" loader "neoforge"
+}
+# loader forge requested from commandline
+if "forge" {
+    require mod "Xaero's minimap" loader "forge"
+}
+

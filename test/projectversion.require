@@ -1,0 +1,2 @@
+# require mod "Sodium" author "jellysquid3" mc-version "26.1.2" loader "fabric" project-version "vf7UgZpC"
+require mod "Sodium" author "jellysquid3" mc-version "1.17" loader "fabric" latest-version

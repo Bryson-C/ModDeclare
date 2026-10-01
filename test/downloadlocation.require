@@ -1,0 +1,9 @@
+mod-location "./ModsFolder"
+max-errors 0
+max-warnings 0
+
+# require mod "Fabric API" author "modmuss50" mc-version "26.2" latest-version
+desire mod "Sodium" organization "CaffeineMC" mc-version "26.2" latest-version
+desire mod "Fabric API" author "modmuss50" mc-version "26.2" latest-version
+desire mod "Xaero's Minimap" author "thexaero" mc-version "26.2" latest-version
+desire mod "Xaero's World Map" author "thexaero" mc-version "26.2" latest-version

@@ -1,0 +1,5 @@
+resource-location "../resource"
+mod-location "../mod"
+
+require resource-pack "mandalas-gui-dark-mode" author "CesarZorak"
+require mod "Sodium" author "jellysquid3" loader "fabric"

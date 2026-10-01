@@ -1,0 +1,9 @@
+# rendering mods
+require loader "fabric" {
+    mod "Sodium" author "jellysquid3"
+    mod "Iris" author "coderbot"
+}
+# helpers
+desire mod "AppleSkin" author "squeek502"
+desire loader "neoforge" mod "AppleSkin"
+desire loader "neoforge" mod "Just Enough Items"

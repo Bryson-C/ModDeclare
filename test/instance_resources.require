@@ -1,0 +1,7 @@
+# While This File Does Work, It Cannot Launch Cause Of Mod Version Incompatibilities
+
+mod-location "./mods"
+resource-location "./resourcepacks"
+shader-location "./shaderpacks"
+
+require mod "Sodium Extra" loader "fabric" mc-version "26.2" include-dependencies

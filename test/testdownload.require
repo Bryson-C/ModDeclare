@@ -1,0 +1,16 @@
+# allow warnings, dont allow errors
+max-errors 0
+max-warnings 5
+
+# rendering
+require loader "fabric" mc-version "1.21" {
+    mod "Iris Shaders" author "coderbot"
+}
+# optimization
+require loader "fabric" mc-version "1.21" organization "CaffeineMC" {
+    mod "Sodium"
+    mod "Lithium"
+    # desire overwrites "require"
+    desire mod "Phosphor"
+    desire mod "Hydrogen"
+}

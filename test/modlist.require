@@ -1,0 +1,4 @@
+require mod "Sodium" loader "fabric" author "jellysquid3"
+require mod "Iris Shaders" loader "fabric" author "coderbot"
+desire mod "somecoolmodthatdoesntexist"
+require mod "Sodium" org "CaffeineMC"

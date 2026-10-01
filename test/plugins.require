@@ -1,0 +1,5 @@
+plugin-location "./plugins"
+mod-location "./mods"
+
+require plugin "worldedit" organization "EngineHub" loader "paper"
+require mod "sodium" organization "CaffeineMC" loader "fabric"

@@ -1,0 +1,21 @@
+mod-location "./mods"
+resource-location "./resource_packs"
+shader-location "./shaders"
+
+iris: require mod "Iris Shaders" author "coderbot" include-dependencies
+
+condition "iris" {
+    require shader "Rethinking Voxels" author "gri573"
+    require shader "Solas Shader" author "Septonious"
+    require shader "Photon Shader" author "sixthsurge"
+    require shader "BSL Shaders" author "CaptTatsu"
+}
+
+if-not "iris" vulkan: require mod "VulkanMod" author "xCollateral" include-dependencies
+if "vulkan" require mod "Beryl" author "xCollateral" include-dependencies
+
+desire resource "Mandala's GUI - Dark mode" author "CesarZorak"
+desire resource "Cubic Sun & Moon" author "JoeFly"
+desire resource "Icons" author "WeNAN"
+
+
