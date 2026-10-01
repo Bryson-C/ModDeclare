@@ -29,8 +29,6 @@ std::pair<ModRequestParseResult, std::vector<ModRequest>> ModDeclareContext::par
     // By Default, Allow 5 Warnings
     this->maxWarningsSetting = 5;
     this->maxErrorsSetting = 0;
-    this->modLocation = "./";
-    this->resourceLocation = "./";
     {
         int index = 0;
         ModRequest prefix;
@@ -70,6 +68,7 @@ std::pair<ModRequestParseResult, std::vector<ModRequest>> ModDeclareContext::par
                 case TokenType::Require: request.setRequired(true); break;
                 case TokenType::Desire: request.setRequired(false); break;
                 case TokenType::Mod: request.name = removeQuotes(tokens[index + 1]); request.projectType = "mod"; break;
+                case TokenType::Plugin: request.name = removeQuotes(tokens[index + 1]); request.projectType = "plugin"; break;
                 case TokenType::Resource: request.name = removeQuotes(tokens[index + 1]); request.projectType = "resourcepack"; break;
                 case TokenType::Shader: request.name = removeQuotes(tokens[index + 1]); request.projectType = "shader"; break;
                 case TokenType::Loader: request.loader = removeQuotes(tokens[index + 1]); break;
@@ -91,6 +90,7 @@ std::pair<ModRequestParseResult, std::vector<ModRequest>> ModDeclareContext::par
                 case TokenType::ModLocation: modLocation = removeQuotes(tokens[index + 1]); break;
                 case TokenType::ResourceLocation: resourceLocation = removeQuotes(tokens[index + 1]); break;
                 case TokenType::ShaderLocation: shaderLocation = removeQuotes(tokens[index + 1]); break;
+                case TokenType::PluginLocation: pluginLocation = removeQuotes(tokens[index + 1]); break;
 
                 default:
                     if (tk[0] != '\"' && !isdigit(tk[0]))
@@ -119,12 +119,15 @@ std::unordered_map<std::string, std::pair<ModRequest, ModDeclareContext::Modrint
     std::unordered_map<std::string, std::pair<ModRequest, ModrinthProjectDownloadData>> downloadsList;
 
     // display the download color labels, Find New Symbols To Help The Colorblind
-    std::print("[{}* Success{} | {}! Not Found{} | {}? Conditions Not Met{} | {}: Added As Dependency{}]\n",
+    std::print("[{}* Success{} | {}! Not Found{} | {}? Conditions Not Met{} | {}: Added As Dependency{} | {}^ Newer Version Available{}]\n",
                Colors::GREEN, Colors::RESET,
                Colors::YELLOW, Colors::RESET,
                Colors::PURPLE, Colors::RESET,
-               Colors::BLUE, Colors::RESET
+               Colors::BLUE, Colors::RESET,
+               Colors::GREEN, Colors::RESET
    );
+
+    auto metaJson = getDownloadMetaJson();
 
     bool logVerbose = flags.contains("verbose") && flags["verbose"] == ProgramFlagState::CommandLine;
     for (int j = 0; j < requests.size(); j++) {
@@ -153,11 +156,16 @@ std::unordered_map<std::string, std::pair<ModRequest, ModDeclareContext::Modrint
             continue;
         }
 
-        std::print("[{}] {}{}{}\n", Colors::ColorString(Colors::GREEN, "*"), Colors::GREEN, req.name, Colors::RESET);
+        // if the currently installed version does not equal the most recent version gotten
+        // (which we know is true because: `req.isLatestVersion()`) then we can assume there is a newer version
+        bool hasNewerVersion = (metaJson.contains(req.name) && req.isLatestVersion() && metaJson[req.name]["version"].get<std::string>() != projectHit->getVersion());
+
+        std::print("[{}] {}{}{}\n", Colors::ColorString(Colors::GREEN, ((!hasNewerVersion)?"*":"^")), Colors::GREEN, req.name, Colors::RESET);
         ModrinthProjectDownloadData data{};
         data.fileName = projectHit->getFileName();
         data.fileURL = projectHit->getFileUrl();
         data.projectVersion = projectHit->getVersion();
+        data.slug = projectHit->getSlugOrId();
         downloadsList[req.name] = {req, data};
         setFlag(req.varName, ProgramFlagState::RequestSuccess);
 
@@ -197,34 +205,38 @@ bool fileIsEmpty(std::ifstream& pFile) {
     return pFile.tellg() == 0 && pFile.peek() == std::ifstream::traits_type::eof();
 }
 
-void ModDeclareContext::filterDownloadsListFromDownloadMetaFile(std::unordered_map<std::string, std::pair<ModRequest, ModrinthProjectDownloadData>>& downloadsList) {
-    // if the file doesn't exist, then no filtering is required and we can craete the file later
-    if (!std::filesystem::exists(givenDirectory+"meta.require.json")) {
-        return;
+nlohmann::json ModDeclareContext::getDownloadMetaJson() {
+    if (!std::filesystem::exists(givenDirectory + "meta.require.json")) {
+        return {};
     }
-    std::ifstream ifs(givenDirectory+"meta.require.json");
+    std::ifstream ifs(givenDirectory + "meta.require.json");
     if (ifs.is_open() && !fileIsEmpty(ifs)) {
         try {
-            int originalDownloadListSize = downloadsList.size();
             // try to parse, this has a real possibility of failing if the file doesn't exist before this function was called
-            nlohmann::json jf = nlohmann::json::parse(ifs);
-            for (auto& entry : jf.items()) {
-                if (downloadsList.contains(entry.key())) {
-                    //std::print("{} exists in download meta, deleting from download list\n", entry.key());
-                    downloadsList.erase(entry.key());
-                }
-            }
-            std::print("{}{}/{} Already Downloaded{}\n", Colors::GREEN, originalDownloadListSize-downloadsList.size(), originalDownloadListSize, Colors::RESET);
-        } catch (std::exception& e) {
+            return nlohmann::json::parse(ifs);
+        } catch (std::exception &e) {
             // try writing an empty json
             ifs.close();
-            std::ofstream ofs(givenDirectory+"meta.require.json");
+            std::ofstream ofs(givenDirectory + "meta.require.json");
             if (ofs.is_open()) {
                 ofs << "{}";
                 ofs.close();
             }
         }
     }
+    return {};
+}
+
+void ModDeclareContext::filterDownloadsListFromDownloadMetaFile(std::unordered_map<std::string, std::pair<ModRequest, ModrinthProjectDownloadData>>& downloadsList) {
+    int originalDownloadListSize = downloadsList.size();
+    // try to parse, this has a real possibility of failing if the file doesn't exist before this function was called
+    for (auto& entry : getDownloadMetaJson().items()) {
+        if (downloadsList.contains(entry.key())) {
+            //std::print("{} exists in download meta, deleting from download list\n", entry.key());
+            downloadsList.erase(entry.key());
+        }
+    }
+    std::print("{}{}/{} Already Downloaded{}\n", Colors::GREEN, originalDownloadListSize-downloadsList.size(), originalDownloadListSize, Colors::RESET);
 }
 
 void ModDeclareContext::downloadFromDownloadsList(const std::unordered_map<std::string, std::pair<ModRequest, ModDeclareContext::ModrinthProjectDownloadData>>& downloadsList) const {
@@ -246,6 +258,8 @@ void ModDeclareContext::downloadFromDownloadsList(const std::unordered_map<std::
             downloadPath = getResourceDownloadLocation();
         } else if (project.second.first.projectType == "shader") {
             downloadPath = getShaderDownloadLocation();
+        } else if (project.second.first.projectType == "plugin") {
+            downloadPath = getPluginDownloadLocation();
         }
 
         std::string savedFileName;
@@ -266,7 +280,9 @@ void ModDeclareContext::downloadFromDownloadsList(const std::unordered_map<std::
         nlohmann::json downloadJson = {
                 {"resource_name", project.second.second.fileName},
                 {"saved_as",      savedFileName},
-                {"version",       project.second.second.projectVersion}
+                {"version",       project.second.second.projectVersion},
+                {"resource_type", project.second.first.projectType},
+                {"slug_or_id",    project.second.second.slug}
         };
         downloadMetaJson[project.first] = downloadJson;
 

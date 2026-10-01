@@ -18,6 +18,7 @@ enum class TokenType {
     Mod,
     Resource,
     Shader,
+    Plugin,
     Loader,
     Author,
     Desire,
@@ -41,6 +42,7 @@ enum class TokenType {
     ModLocation,
     ResourceLocation,
     ShaderLocation,
+    PluginLocation
 };
 
 namespace {
@@ -58,6 +60,7 @@ namespace {
         if (str == SEPARATOR_CHAR || str == "\n") return TokenType::Separator;
         if (str == "require") return TokenType::Require;
         if (str == "mod") return TokenType::Mod;
+        if (str == "plugin") return TokenType::Plugin;
         if (str == "resource" || str == "resource-pack") return TokenType::Resource;
         if (str == "shader") return TokenType::Shader;
         if (str == "loader") return TokenType::Loader;
@@ -76,6 +79,7 @@ namespace {
         if (str == "mod-location") return TokenType::ModLocation;
         if (str == "resource-location") return TokenType::ResourceLocation;
         if (str == "shader-location") return TokenType::ShaderLocation;
+        if (str == "plugin-location") return TokenType::PluginLocation;
         if (str == "condition" || str == "if") return TokenType::Condition;
         if (str == "not" || str == "if-not") return TokenType::NotCondition;
         // ResourceName is a special case, it can be named whatever so long as the last token is a colon

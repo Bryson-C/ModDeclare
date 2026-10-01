@@ -229,11 +229,12 @@ private:
     std::string modLocation = "./";
     std::string resourceLocation = "./";
     std::string shaderLocation = "./";
+    std::string pluginLocation = "./";
     int warnings = 0, errors = 0;
 
 public:
     struct ModrinthProjectDownloadData {
-        std::string fileURL, fileName, projectVersion;
+        std::string fileURL, fileName, projectVersion, slug;
     };
 private:
     ModrinthProjectDownloadData getModrinthProjectDownloadDataFromSlug(const std::string& slug, const std::string& projectVersion) {
@@ -247,6 +248,7 @@ private:
                 data.fileName = json["files"][0]["filename"];
                 data.fileURL = json["files"][0]["url"];
                 data.projectVersion = projectVersion;
+                data.slug = slug;
                 return data;
             }
         } catch (std::exception& e) {
@@ -327,6 +329,10 @@ public:
 
     std::unordered_map<std::string, std::pair<ModRequest, ModrinthProjectDownloadData>> getDownloadListFromRequests(const std::vector<ModRequest>& requests);
 
+private:
+    nlohmann::json getDownloadMetaJson();
+
+public:
     void filterDownloadsListFromDownloadMetaFile(std::unordered_map<std::string, std::pair<ModRequest, ModrinthProjectDownloadData>>& downloadsList);
 
     void downloadFromDownloadsList(const std::unordered_map<std::string, std::pair<ModRequest, ModrinthProjectDownloadData>>& downloadsList) const;
@@ -348,6 +354,7 @@ public:
     [[nodiscard]] std::string getModDownloadLocation() const { return givenDirectory+modLocation; }
     [[nodiscard]] std::string getResourceDownloadLocation() const { return givenDirectory+resourceLocation; }
     [[nodiscard]] std::string getShaderDownloadLocation() const { return givenDirectory+shaderLocation; }
+    [[nodiscard]] std::string getPluginDownloadLocation() const { return givenDirectory+pluginLocation; }
 
     [[nodiscard]] int getWarnings() const { return warnings; }
     [[nodiscard]] int getErrors() const { return errors; }
