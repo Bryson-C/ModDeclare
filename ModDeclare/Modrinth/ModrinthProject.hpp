@@ -165,6 +165,7 @@ private:
             std::print("Cannot Get Json Data For Modrinth Project: Not Enough Info To Send Request\n");
         }
     }
+    
 public:
     explicit ModrinthProject(const nlohmann::json& json) {
         slugOrId = json["project_id"].get<std::string>();

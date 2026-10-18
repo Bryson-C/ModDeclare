@@ -41,9 +41,14 @@ std::optional<ModrinthProjectSearchResult> getProjectSlug(const std::string& nam
     for (const auto &potential : Modrinth::getProjectSearchResults(name, 10)) {
         // if name and at least author or organization match
         std::string search = removeAllNonAlpha(name), actual = removeAllNonAlpha(potential.title);
-        if (
-                (compareIgnoreCase(actual, search) || containsIgnoreCase(actual, search)) &&
-                (compareIgnoreCase(potential.organization, organization) || compareIgnoreCase(potential.author, author))) {
+        //std::print("search: {} | actual: {}\n", search, actual);
+
+        if ((compareIgnoreCase(actual, search) || containsIgnoreCase(actual, search))) {
+            //std::print("\tCase 1; Got: {}\n", potential.title);
+            return {potential};
+        }
+        if ((compareIgnoreCase(potential.organization, organization) || compareIgnoreCase(potential.author, author))) {
+            //std::print("\tCase 2; Got: {}\n", potential.title);
             return {potential};
         }
     }
@@ -64,7 +69,7 @@ std::optional<Modrinth::DisplayNameAndSlug> Modrinth::getProjectDisplayNameAndSl
 }
 
 // to avoid circular dependencies and large dependency trees, add the project id to a set, and check if we already have it in the set, if so, skip
-std::optional<ModrinthProject> getProjectVersionOrLatestStable(const std::string& slugOrId, const std::string& projectVersion, const std::string& mcVersion, const std::string& loader, std::unordered_set<std::string>& requestedDependencies, bool logVerbose = false, bool allowBetas = false, bool allowAlphas = false) {
+std::pair<std::optional<ModrinthProject>, std::string> getProjectVersionOrLatestStable(const std::string& slugOrId, const std::string& projectVersion, const std::string& mcVersion, const std::string& loader, std::unordered_set<std::string>& requestedDependencies, bool logVerbose = false, bool allowBetas = false, bool allowAlphas = false) {
     // make sure if we already have the slug/id in the set, we don't get it again and can simply return nothing
     if (requestedDependencies.contains(slugOrId)) {
         return {};
@@ -72,6 +77,18 @@ std::optional<ModrinthProject> getProjectVersionOrLatestStable(const std::string
 
     // possible version options
     std::vector<nlohmann::json> possibleVersions;
+
+    // any notes that the program may need to add
+    std::string loggingNotes;
+
+    // This can be examined to give the user more detail on if their hit can be fulfilled by adding alphas, betas, et cetera
+    // to include all release types add: "release", "beta", and "alpha"
+    std::unordered_set<std::string> releaseTypeWhiteList{"release"};
+    if (allowBetas) releaseTypeWhiteList.emplace("beta");
+    if (allowAlphas) releaseTypeWhiteList.emplace("alpha");
+    // [0] = release, [1] = beta, [2] = alpha
+    int releaseTypeHits[3] = {0,0,0};
+
 
     // get the project versions for the specified minecraft version
     if (projectVersion.empty()) {
@@ -91,12 +108,6 @@ std::optional<ModrinthProject> getProjectVersionOrLatestStable(const std::string
 
             nlohmann::json projectVersions = getJsonFromRequestUrl(cleanStringForUrl(query));
 
-            // to include all release types add: "release", "beta", and "alpha"
-            std::unordered_set<std::string> releaseTypeWhiteList{"release"};
-            if (allowBetas) releaseTypeWhiteList.emplace("beta");
-            if (allowAlphas) releaseTypeWhiteList.emplace("alpha");
-            // [0] = release, [1] = beta, [2] = alpha
-            int releaseTypeHits[3] = {0,0,0};
             for (const auto &version: projectVersions) {
                 if (version["version_type"] == "release") releaseTypeHits[0]++;
                 else if (version["version_type"] == "beta") releaseTypeHits[1]++;
@@ -107,12 +118,6 @@ std::optional<ModrinthProject> getProjectVersionOrLatestStable(const std::string
                     possibleVersions.push_back(version);
                     continue;
                 }
-            }
-            if (logVerbose) {
-                std::string releasesString = std::format("{} {} Releases {}", releaseTypeHits[0] > 0 ? Colors::GREEN : Colors::RESET, releaseTypeHits[0], Colors::RESET);
-                std::string betasString = std::format("{} {} Betas {}", releaseTypeHits[1] > 0 ? Colors::GREEN : Colors::RESET, releaseTypeHits[1], Colors::RESET);
-                std::string alphasString = std::format("{} {} Alphas {}", releaseTypeHits[2] > 0 ? Colors::GREEN : Colors::RESET, releaseTypeHits[2], Colors::RESET);
-                std::print("{} [{} | {} | {}]\n", slugOrId, releasesString, betasString, alphasString);
             }
         } catch (std::exception &e) {
             std::print("Failed Parsing Json For {}: {}\n", slugOrId, e.what());
@@ -136,6 +141,13 @@ std::optional<ModrinthProject> getProjectVersionOrLatestStable(const std::string
         }
     }
 
+    if (logVerbose) {
+        std::string releasesString = std::format("{} {} Releases {}", releaseTypeHits[0] > 0 ? Colors::GREEN : Colors::RESET, releaseTypeHits[0], Colors::RESET);
+        std::string betasString = std::format("{} {} Betas {}", releaseTypeHits[1] > 0 ? Colors::GREEN : Colors::RESET, releaseTypeHits[1], Colors::RESET);
+        std::string alphasString = std::format("{} {} Alphas {}", releaseTypeHits[2] > 0 ? Colors::GREEN : Colors::RESET, releaseTypeHits[2], Colors::RESET);
+        loggingNotes += std::format("{} [{} | {} | {}]\n", slugOrId, releasesString, betasString, alphasString);
+    }
+
     // filter, currently only pick the most recently uploaded
     int i = 0, recent = 0;
     for (const auto &version: possibleVersions) {
@@ -150,7 +162,20 @@ std::optional<ModrinthProject> getProjectVersionOrLatestStable(const std::string
 
     // if no recent version has been iterated over (i.e. the list was empty) return none
     if (possibleVersions.empty()) {
-        return {};
+        // This is roughly the same error message, but the actual string must vary to help the user
+
+        // Im going to be honest, if there is a release version that somehow isn't chosen, then fuck me I guess
+        if (releaseTypeHits[0] > 0)
+        ;
+        // Betas available, but if it's not selected, then the user can be prompted to include betas
+        else if (releaseTypeHits[1] > 0)
+            loggingNotes += std::format("{}Could Not Find Recent Version For '{}', Found Beta Version, Try Including Betas, Or Wait For Releases; check: https://modrinth.com/mod/{} {}\n", Colors::RED, slugOrId, slugOrId, Colors::RESET);
+        // Alphas available, but if it's not selected, then the user can be prompted to include alphas and/or betas
+        else if (releaseTypeHits[2] > 0)
+            loggingNotes += std::format("{}Could Not Find Recent Version For '{}', Found Alpha Version, Try Including Alphas, Or Wait For Releases Or Betas; check: https://modrinth.com/mod/{} {}\n", Colors::RED, slugOrId, slugOrId, Colors::RESET);
+        else
+            loggingNotes += std::format("{}Could Not Find Any Versions For '{}'; check: https://modrinth.com/mod/{} {}\n", Colors::RED, slugOrId, slugOrId, Colors::RESET);
+        return {{}, loggingNotes};
     }
 
     // just get the basics of what the mod needs first
@@ -169,8 +194,8 @@ std::optional<ModrinthProject> getProjectVersionOrLatestStable(const std::string
             logVerbose
         );
 
-        if (dep.has_value()) {
-            project.addDependency(dep.value(), dependency["dependency_type"]);
+        if (dep.first.has_value()) {
+            project.addDependency(dep.first.value(), dependency["dependency_type"]);
             requestedDependencies.insert(dependency["project_id"].get<std::string>());
         } else {
             // once we start to get no more dependencies that are valid, we can exit
@@ -178,17 +203,17 @@ std::optional<ModrinthProject> getProjectVersionOrLatestStable(const std::string
         }
     }
 
-    return project;
+    return {project, loggingNotes};
 }
 
-std::optional<ModrinthProject> Modrinth::getModrinthProject(const std::string& name, const std::string& author, const std::string &organization, const std::string& mcVersion, const std::string& loader, const std::string& projectVersion, bool logVerbose, bool allowBetas, bool allowAlphas) {
+std::pair<std::optional<ModrinthProject>, std::string> Modrinth::getModrinthProject(const std::string& name, const std::string& author, const std::string &organization, const std::string& mcVersion, const std::string& loader, const std::string& projectVersion, bool logVerbose, bool allowBetas, bool allowAlphas) {
     // get (or attempt to get) the slug of the project (basically its unique identifier)
     std::optional<ModrinthProjectSearchResult> proj = getProjectSlug(name, author, organization);
 
     // check to make sure a valid project was found
     if (!proj.has_value()) {
         // nothing else we can do here, so just return
-        return {};
+        return {{}, std::format("{}Could Not Find Project '{}'{}\n", Colors::RED, name, Colors::RESET)};
     }
 
     std::unordered_set<std::string> requestedDependencies{};

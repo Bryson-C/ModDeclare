@@ -58,7 +58,7 @@ namespace Modrinth {
 
     std::optional<DisplayNameAndSlug> getProjectDisplayNameAndSlugFromID(const std::string& projectId);
 
-    std::optional<ModrinthProject> getModrinthProject(
+    std::pair<std::optional<ModrinthProject>, std::string> getModrinthProject(
             const std::string &name,
             const std::string &author,
             const std::string &organization,

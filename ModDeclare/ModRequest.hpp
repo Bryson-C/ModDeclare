@@ -330,11 +330,11 @@ public:
     std::unordered_map<std::string, std::pair<ModRequest, ModrinthProjectDownloadData>> getDownloadListFromRequests(const std::vector<ModRequest>& requests);
 
 private:
-    nlohmann::json getDownloadMetaJson();
+    nlohmann::json getDownloadMetaJson() const;
+    void setMetaDownloadFile(const nlohmann::json& json) const;
+
 
 public:
-    void filterDownloadsListFromDownloadMetaFile(std::unordered_map<std::string, std::pair<ModRequest, ModrinthProjectDownloadData>>& downloadsList);
-
     void downloadFromDownloadsList(const std::unordered_map<std::string, std::pair<ModRequest, ModrinthProjectDownloadData>>& downloadsList) const;
 
     bool containsFlag(const std::string& flag) const {
