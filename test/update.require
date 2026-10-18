@@ -1,0 +1,5 @@
+mod-location "./test-mods"
+mc-version "26.2" loader "fabric" {
+    require mod "sodium" latest-version loader "fabric"
+    # require mod "sodium" project-version "2Yom1N68"
+}

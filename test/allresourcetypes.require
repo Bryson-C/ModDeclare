@@ -1,0 +1,31 @@
+mod-location "./mods"
+plugin-location "./plugins"
+shader-location "./shaders"
+resource-location "./resource-packs"
+
+max-errors 0
+max-warnings 5
+
+# technically would not do anything as this is server only
+require plugin "fast async world edit" latest-version
+require shader "complementary" latest-version
+require resource-pack "faithful" latest-version
+
+# use a slightly outdated stable version of sodium to show auto update detection
+# this version was the original version requested:
+# desire sodium: mod "sodium" project-version "2Yom1N68" mc-version "26.2"
+
+# but when declaring a new version, an available update will be shown for the version
+desire sodium: mod "sodium" latest-version mc-version "26.2"
+
+# If sodium for whatever reason cannot be downloaded we go for vulkan mod (my beloved API)
+# also showing off scopes
+require if-not "sodium" allow-betas allow-alphas include-dependencies mc-version "26.2" {
+    mod "vulkanmod" latest-version
+}
+# Since we need to know whether or not sodium is installed/found correctly
+# use another flag for checking whether or not shaders should be added
+# make it a requirement to have it downloaded if sodium is also downloaded
+require if "sodium" {
+    mod "iris" latest-version mc-version "26.2"
+}
