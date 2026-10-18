@@ -180,11 +180,10 @@ std::unordered_map<std::string, std::pair<ModRequest, ModDeclareContext::Modrint
                 std::string fileLocation = metaJson[req.name]["location"].get<std::string>();
                 // remove old json
                 metaJson.erase(req.name);
-                std::print("update stuffs: erasing key {}\n", req.name);
                 // delete old file
                 std::error_code ec;
                 if (!std::filesystem::remove(fileLocation + "/" + filename, ec)) {
-                    std::print("Failed Removing File: {} -- EC: {}\n",fileLocation + "/" + filename, ec.message());
+                    std::print("{}Failed Removing File: {} -- EC: {}{}\n", Colors::RED, fileLocation + "/" + filename, ec.message(), Colors::RESET);
                 }
             }
         }
